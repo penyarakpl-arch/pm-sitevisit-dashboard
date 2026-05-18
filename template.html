@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMR Site Visit Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --c1:#323351;--c2:#005BA9;--c3:#8B9FD2;
+  --s-complete:#B7D07A;--s-complete-bg:#F2F8E6;--s-complete-text:#3D6B0A;
+  --s-onprocess:#A4D6E1;--s-onprocess-bg:#EBF7FA;--s-onprocess-text:#0B5F72;
+  --s-overdue:#E78D84;--s-overdue-bg:#FDF1F0;--s-overdue-text:#8B1A12;
+  --c5:#FCD99C;--c6:#9EC546;
+  --bg:#F4F6FA;--card:#FFFFFF;--border:#E2E6F0;
+  --text:#1A1C2E;--sub:#6B7280;--light:#F8F9FC;
+  --radius:14px;--radius-sm:8px;--shadow:0 2px 12px rgba(50,51,81,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);font-size:15px;min-height:100vh;}
+
+/* ─── Header ─── */
+.header{background:var(--c1);color:#fff;padding:20px 28px 0;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(50,51,81,.25);}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.header-logo{display:flex;align-items:center;gap:10px;}
+.logo-dot{width:10px;height:10px;border-radius:50%;background:var(--c5);}
+.header-title{font-size:18px;font-weight:700;letter-spacing:.02em;}
+.header-sub{font-size:12px;opacity:.6;margin-top:1px;}
+.header-badge{background:rgba(255,255,255,.12);border-radius:20px;padding:4px 12px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--c5);}
+
+/* Filter bar */
+.filter-bar{display:flex;gap:8px;overflow-x:auto;padding-bottom:14px;scrollbar-width:none;align-items:flex-end;}
+.filter-bar::-webkit-scrollbar{display:none;}
+.filter-group{display:flex;flex-direction:column;min-width:140px;flex-shrink:0;}
+.filter-group.wide{min-width:200px;}
+.filter-group.narrow{min-width:110px;}
+.filter-label{font-size:10px;opacity:.6;margin-bottom:4px;letter-spacing:.06em;text-transform:uppercase;}
+.filter-select,.filter-input{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:var(--radius-sm);padding:7px 10px;font-family:'Sarabun',sans-serif;font-size:13px;color:#fff;outline:none;width:100%;cursor:pointer;}
+.filter-select option{color:var(--text);background:#fff;}
+.filter-input::placeholder{opacity:.5;}
+.filter-input:focus,.filter-select:focus{border-color:var(--c5);background:rgba(255,255,255,.18);}
+.filter-actions{display:flex;gap:6px;align-items:flex-end;flex-shrink:0;padding-bottom:1px;}
+.btn-filter{height:33px;border-radius:var(--radius-sm);border:none;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;cursor:pointer;padding:0 14px;transition:all .15s;}
+.btn-apply{background:var(--c5);color:var(--c1);}
+.btn-reset{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);}
+.btn-apply:hover{filter:brightness(1.08);}
+.btn-reset:hover{background:rgba(255,255,255,.22);}
+.search-wrap{position:relative;}
+.search-wrap input{padding-left:28px !important;}
+.search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;opacity:.5;pointer-events:none;}
+
+/* ─── Main ─── */
+.main{padding:24px 28px;max-width:1400px;margin:0 auto;}
+
+/* ─── KPI Cards ─── */
+.cards-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:28px;}
+@media(max-width:1100px){.cards-grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:700px){.cards-grid{grid-template-columns:repeat(2,1fr);}}
+.kpi-card{background:var(--card);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);border:1px solid var(--border);position:relative;overflow:hidden;transition:transform .15s;cursor:pointer;}
+.kpi-card:hover{transform:translateY(-2px);}
+.kpi-accent{position:absolute;top:0;left:0;width:4px;height:100%;border-radius:var(--radius) 0 0 var(--radius);}
+.kpi-icon{font-size:22px;margin-bottom:8px;}
+.kpi-value{font-size:30px;font-weight:700;line-height:1;color:var(--c1);}
+.kpi-label{font-size:12px;color:var(--sub);margin-top:5px;line-height:1.4;}
+.kpi-sub{font-size:11px;color:var(--sub);margin-top:4px;font-family:'IBM Plex Mono',monospace;}
+
+/* ─── Section ─── */
+.section{background:var(--card);border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:22px;}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
+.section-title{font-size:15px;font-weight:700;color:var(--c1);display:flex;align-items:center;gap:8px;}
+.section-title::before{content:'';width:4px;height:18px;background:var(--c2);border-radius:2px;flex-shrink:0;}
+.section-badge{background:var(--c3);color:#fff;font-size:11px;border-radius:20px;padding:2px 9px;font-family:'IBM Plex Mono',monospace;}
+.expand-toggle{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;font-family:'Sarabun',sans-serif;color:var(--sub);cursor:pointer;transition:all .12s;}
+.expand-toggle:hover{background:var(--light);color:var(--c2);}
+
+/* ─── Status Legend ─── */
+.status-legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub);}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+
+/* ─── Horizontal Bar ─── */
+.hbar-wrap{width:100%;}
+.hbar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;cursor:pointer;border-radius:6px;padding:4px 6px;transition:background .12s;}
+.hbar-row:hover{background:var(--light);}
+.hbar-label{font-size:12px;color:var(--c1);width:210px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hbar-track{flex:1;height:22px;background:var(--light);border-radius:4px;overflow:hidden;display:flex;}
+.hbar-seg{height:100%;transition:width .4s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-size:10px;font-weight:600;white-space:nowrap;min-width:0;}
+.hbar-seg-text{color:rgba(0,0,0,.5);}
+.hbar-total{font-size:11px;color:var(--sub);width:38px;text-align:right;flex-shrink:0;font-family:'IBM Plex Mono',monospace;}
+
+/* ─── Cross Table ─── */
+.cross-table{width:100%;border-collapse:collapse;font-size:13px;}
+.cross-table th{padding:10px 14px;text-align:center;font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--border);}
+.cross-table th.left{text-align:left;}
+.cross-table td{padding:10px 14px;border-bottom:1px solid var(--border);text-align:center;vertical-align:middle;}
+.cross-table td.label-cell{text-align:left;font-weight:600;color:var(--c1);}
+.cross-table tr:hover td{background:var(--light);}
+.cross-table tr{cursor:pointer;}
+.cross-pill{display:inline-block;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;font-family:'IBM Plex Mono',monospace;min-width:36px;}
+.pill-complete{background:var(--s-complete-bg);color:var(--s-complete-text);border:1px solid var(--s-complete);}
+.pill-onprocess{background:var(--s-onprocess-bg);color:var(--s-onprocess-text);border:1px solid var(--s-onprocess);}
+.pill-overdue{background:var(--s-overdue-bg);color:var(--s-overdue-text);border:1px solid var(--s-overdue);}
+.pill-total{background:var(--light);color:var(--c1);border:1px solid var(--border);font-weight:700;}
+.level-red-badge{background:#FDF1F0;color:#8B1A12;border-radius:4px;padding:2px 8px;font-weight:600;}
+.level-yellow-badge{background:#FFFBEB;color:#92400E;border-radius:4px;padding:2px 8px;font-weight:600;}
+.cross-pct{font-size:10px;color:var(--sub);margin-top:2px;}
+.cross-cell{display:flex;flex-direction:column;align-items:center;}
+
+/* ─── Month Chart ─── */
+.month-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:6px;align-items:end;margin-top:10px;}
+.month-col{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;}
+.month-col:hover .month-bar-wrap{filter:brightness(.95);}
+.month-bar-wrap{width:100%;display:flex;flex-direction:column-reverse;border-radius:6px 6px 0 0;overflow:hidden;}
+.month-seg{width:100%;}
+.month-label{font-size:10px;color:var(--sub);text-align:center;white-space:nowrap;}
+.month-total{font-size:10px;color:var(--c1);font-weight:600;font-family:'IBM Plex Mono',monospace;}
+.month-close-pct{font-size:9px;font-weight:600;}
+.month-overdue-badge{font-size:9px;color:var(--s-overdue-text);background:var(--s-overdue-bg);border-radius:3px;padding:1px 4px;}
+
+/* ─── Overdue ─── */
+.overdue-list{display:grid;gap:10px;}
+.overdue-row{background:var(--light);border-radius:10px;padding:14px 16px;cursor:pointer;border:1px solid var(--border);transition:all .12s;}
+.overdue-row:hover{border-color:var(--s-overdue);background:var(--s-overdue-bg);}
+.overdue-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.overdue-name{font-size:13px;font-weight:600;color:var(--c1);flex:1;margin-right:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.overdue-count{font-size:13px;font-weight:700;color:var(--s-overdue-text);font-family:'IBM Plex Mono',monospace;flex-shrink:0;}
+.cat-chips{display:flex;flex-wrap:wrap;gap:5px;}
+.cat-chip{font-size:10px;border-radius:20px;padding:2px 8px;border:1px solid;}
+
+/* ─── Red heatmap ─── */
+.heat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;}
+.heat-card{background:var(--light);border-radius:10px;padding:14px 16px;cursor:pointer;border:1px solid var(--border);transition:all .12s;}
+.heat-card:hover{border-color:var(--s-overdue);background:var(--s-overdue-bg);}
+.heat-cat{font-size:13px;font-weight:600;color:var(--c1);margin-bottom:6px;}
+.heat-count{font-size:26px;font-weight:700;color:var(--s-overdue-text);font-family:'IBM Plex Mono',monospace;}
+.heat-label{font-size:11px;color:var(--sub);}
+.heat-bar{height:5px;background:var(--border);border-radius:3px;margin-top:8px;overflow:hidden;}
+.heat-bar-fill{height:100%;background:var(--s-overdue);border-radius:3px;}
+
+/* ─── Responsibility ─── */
+.resp-table{width:100%;border-collapse:collapse;}
+.resp-table th{font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;padding:8px 12px;text-align:left;border-bottom:2px solid var(--border);}
+.resp-table td{padding:9px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
+.resp-table tr:hover td{background:var(--light);cursor:pointer;}
+.resp-bar{height:8px;border-radius:4px;background:var(--border);margin-top:4px;overflow:hidden;}
+.resp-bar-fill{height:100%;border-radius:4px;background:var(--s-complete);}
+
+/* ─── Badge ─── */
+.badge-complete{background:var(--s-complete-bg);color:var(--s-complete-text);font-size:11px;border-radius:20px;padding:2px 8px;font-weight:500;}
+.badge-onprocess{background:var(--s-onprocess-bg);color:var(--s-onprocess-text);font-size:11px;border-radius:20px;padding:2px 8px;font-weight:500;}
+.badge-overdue{background:var(--s-overdue-bg);color:var(--s-overdue-text);font-size:11px;border-radius:20px;padding:2px 8px;font-weight:500;}
+
+/* ─── Two col ─── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+@media(max-width:900px){.two-col{grid-template-columns:1fr;}}
+
+/* ─── Modal ─── */
+.modal-overlay{position:fixed;inset:0;background:rgba(30,30,50,.55);z-index:1000;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:960px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 -8px 40px rgba(50,51,81,.2);}
+.modal-header{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.modal-title{font-size:15px;font-weight:700;color:var(--c1);}
+.modal-close{width:32px;height:32px;border-radius:50%;border:none;background:var(--light);color:var(--sub);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.modal-close:hover{background:var(--border);}
+.modal-body{overflow-y:auto;flex:1;}
+.modal-count{font-size:12px;color:var(--sub);padding:10px 22px;border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;}
+.data-table{width:100%;border-collapse:collapse;font-size:12px;}
+.data-table th{font-size:10px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;padding:9px 12px;text-align:left;background:var(--light);position:sticky;top:0;border-bottom:1px solid var(--border);}
+.data-table td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:top;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.data-table tr:hover td{background:#F8FAFF;}
+.level-red{background:var(--s-overdue-bg);color:var(--s-overdue-text);border-radius:3px;padding:1px 6px;font-weight:500;}
+.level-yellow{background:#FFFBEB;color:#92400E;border-radius:3px;padding:1px 6px;font-weight:500;}
+.st-complete{color:var(--s-complete-text);font-weight:500;}
+.st-onprocess{color:var(--s-onprocess-text);font-weight:500;}
+.st-overdue{color:var(--s-overdue-text);font-weight:600;}
+.pagination{display:flex;align-items:center;gap:8px;padding:12px 22px;border-top:1px solid var(--border);font-size:12px;color:var(--sub);flex-wrap:wrap;}
+.page-btn{background:var(--light);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:'Sarabun',sans-serif;}
+.page-btn:hover,.page-btn.active{background:var(--c2);color:#fff;border-color:var(--c2);}
+/* Modal filter bar */
+.modal-filter-bar{display:flex;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--light);flex-wrap:wrap;align-items:flex-end;flex-shrink:0;}
+.mf-group{display:flex;flex-direction:column;gap:3px;}
+.mf-label{font-size:9px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.06em;}
+.mf-input,.mf-select{font-family:'Sarabun',sans-serif;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:5px 8px;background:#fff;color:var(--text);outline:none;height:28px;}
+.mf-input:focus,.mf-select:focus{border-color:var(--c2);}
+.mf-input{min-width:130px;}
+.mf-select{min-width:100px;cursor:pointer;}
+.mf-btn{height:28px;border-radius:6px;border:none;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;cursor:pointer;padding:0 12px;background:var(--c2);color:#fff;}
+.mf-btn:hover{filter:brightness(1.1);}
+.mf-reset{background:var(--light);color:var(--sub);border:1px solid var(--border);}
+.mf-reset:hover{background:var(--border);}
+.mf-count{font-size:11px;color:var(--sub);font-family:'IBM Plex Mono',monospace;align-self:center;white-space:nowrap;}
+/* Sortable header */
+.data-table th{cursor:pointer;user-select:none;white-space:nowrap;}
+.data-table th:hover{background:#E8ECF5;color:var(--c2);}
+.sort-arrow{margin-left:4px;font-size:9px;opacity:.5;}
+.sort-arrow.active{opacity:1;color:var(--c2);}
+
+@media(max-width:768px){
+  .main{padding:16px;}
+  .header{padding:16px 16px 0;}
+  .hbar-label{width:130px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<div class="header">
+  <div class="header-top">
+    <div class="header-logo">
+      <div class="logo-dot"></div>
+      <div>
+        <div class="header-title">PMR Site Visit Dashboard</div>
+        <div class="header-sub">ข้อมูล ณ วันที่ PLACEHOLDER_DATE</div>
+      </div>
+    </div>
+    <div class="header-badge" id="hdr-count">กำลังโหลด...</div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-group narrow">
+      <div class="filter-label">BU / สังกัด</div>
+      <select class="filter-select" id="f-bu"><option value="">ทั้งหมด</option></select>
+    </div>
+    <div class="filter-group wide">
+      <div class="filter-label">ชื่อโครงการ</div>
+      <select class="filter-select" id="f-proj"><option value="">ทั้งหมด</option></select>
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">ผู้ตรวจ</div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="filter-input" id="f-inspector" type="text" placeholder="พิมพ์ค้นหา...">
+      </div>
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">Responsibility</div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="filter-input" id="f-resp" type="text" placeholder="เช่น PMR, HC...">
+      </div>
+    </div>
+    <div class="filter-group narrow">
+      <div class="filter-label">หมวด</div>
+      <select class="filter-select" id="f-cat"><option value="">ทั้งหมด</option></select>
+    </div>
+    <div class="filter-group narrow">
+      <div class="filter-label">ระดับ</div>
+      <select class="filter-select" id="f-level">
+        <option value="">ทั้งหมด</option>
+        <option value="Red">🔴 Red</option>
+        <option value="Yellow">🟡 Yellow</option>
+        <option value="ไม่ระบุ">ไม่ระบุ</option>
+      </select>
+    </div>
+    <div class="filter-group narrow">
+      <div class="filter-label">Status</div>
+      <select class="filter-select" id="f-status">
+        <option value="">ทั้งหมด</option>
+        <option value="Complete">✅ Complete</option>
+        <option value="On Process">🔄 On Process</option>
+        <option value="overdue">⚠️ เกินกำหนด (ยัง On Process)</option>
+      </select>
+    </div>
+    <div class="filter-actions">
+      <button class="btn-filter btn-apply" onclick="applyFilters()">ค้นหา</button>
+      <button class="btn-filter btn-reset" onclick="resetFilters()">รีเซ็ต</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+
+  <!-- 1. KPI Cards -->
+  <div class="cards-grid">
+    <div class="kpi-card" onclick="openModalFiltered('all')">
+      <div class="kpi-accent" style="background:var(--c2)"></div>
+      <div class="kpi-icon">📋</div>
+      <div class="kpi-value" id="kpi-total">—</div>
+      <div class="kpi-label">รายการทั้งหมด</div>
+      <div class="kpi-sub" id="kpi-proj">— โครงการ</div>
+    </div>
+    <div class="kpi-card" onclick="openModalFiltered('Complete')">
+      <div class="kpi-accent" style="background:var(--s-complete)"></div>
+      <div class="kpi-icon">✅</div>
+      <div class="kpi-value" id="kpi-complete">—</div>
+      <div class="kpi-label">แล้วเสร็จ (Complete)</div>
+      <div class="kpi-sub" id="kpi-complete-pct">—%</div>
+    </div>
+    <div class="kpi-card" onclick="openModalFiltered('On Process')">
+      <div class="kpi-accent" style="background:var(--s-onprocess)"></div>
+      <div class="kpi-icon">🔄</div>
+      <div class="kpi-value" id="kpi-onprocess">—</div>
+      <div class="kpi-label">กำลังดำเนินการ</div>
+      <div class="kpi-sub" id="kpi-onprocess-pct">—%</div>
+    </div>
+    <div class="kpi-card" onclick="openModalFiltered('overdue')">
+      <div class="kpi-accent" style="background:var(--s-overdue)"></div>
+      <div class="kpi-icon">⚠️</div>
+      <div class="kpi-value" id="kpi-overdue">—</div>
+      <div class="kpi-label">On Process เกินกำหนด</div>
+      <div class="kpi-sub" id="kpi-overdue-pct">—% ของ On Process</div>
+    </div>
+    <div class="kpi-card" onclick="openModalFiltered('Red')" style="position:relative">
+      <div class="kpi-accent" style="background:#C0392B"></div>
+      <div class="kpi-icon">🔴</div>
+      <div class="kpi-value" id="kpi-red">—</div>
+      <div class="kpi-label">Red — ยัง On Process</div>
+      <div class="kpi-sub" id="kpi-red-pct">—% ของ On Process</div>
+    </div>
+    <div class="kpi-card" onclick="openModalFiltered('Yellow')" style="position:relative">
+      <div class="kpi-accent" style="background:#F59E0B"></div>
+      <div class="kpi-icon">🟡</div>
+      <div class="kpi-value" id="kpi-yellow">—</div>
+      <div class="kpi-label">Yellow — ยัง On Process</div>
+      <div class="kpi-sub" id="kpi-yellow-pct">—% ของ On Process</div>
+    </div>
+  </div>
+
+  <!-- 2. Projects by BU -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">โครงการที่เข้าตรวจ แยกตามโครงการ</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <div class="status-legend" style="margin:0;">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--s-complete)"></div>Complete</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--s-onprocess)"></div>On Process</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--s-overdue)"></div>เกินกำหนด</div>
+        </div>
+        <select id="bar-sort" onchange="renderProjectBars()" style="font-size:12px;border:1px solid var(--border);border-radius:6px;padding:4px 8px;background:var(--light);color:var(--sub);cursor:pointer;">
+          <option value="total">เรียง: จำนวนทั้งหมด</option>
+          <option value="overdue">เรียง: เกินกำหนด</option>
+          <option value="complete_pct">เรียง: % Complete</option>
+        </select>
+        <button class="expand-toggle" id="bar-expand-btn" onclick="toggleBarExpand()">แสดงทั้งหมด</button>
+      </div>
+    </div>
+    <div id="project-bars" class="hbar-wrap"></div>
+  </div>
+
+  <!-- 3. Month trend -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">แนวโน้มรายเดือน — ปิดงาน vs เกินกำหนด</div>
+      <div class="status-legend" style="margin:0;">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--s-complete)"></div>Complete</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--s-onprocess)"></div>On Process</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--s-overdue)"></div>เกินกำหนด</div>
+      </div>
+    </div>
+    <div id="month-chart" class="month-grid"></div>
+  </div>
+
+  <!-- NEW: Cross Table ระดับ × Status -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">ระดับความสำคัญ × Status — สรุปภาพรวม</div>
+      <span class="section-badge">คลิกแต่ละช่องดู raw data</span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="cross-table" id="cross-table">
+        <thead>
+          <tr>
+            <th class="left" style="width:120px">ระดับ</th>
+            <th>✅ Complete</th>
+            <th>🔄 On Process<br><span style="font-weight:400;font-size:10px">(ไม่เกินกำหนด)</span></th>
+            <th>⚠️ On Process<br><span style="font-weight:400;font-size:10px">(เกินกำหนด)</span></th>
+            <th>รวม</th>
+            <th style="min-width:120px">% Complete</th>
+          </tr>
+        </thead>
+        <tbody id="cross-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 4+5. Two col -->
+  <div class="two-col">
+    <!-- Overdue top projects -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">On Process เกินกำหนด — Top โครงการ</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="section-badge" id="overdue-proj-count">—</span>
+          <button class="expand-toggle" id="overdue-expand-btn" onclick="toggleOverdueExpand()">แสดงทั้งหมด</button>
+        </div>
+      </div>
+      <div id="overdue-list" class="overdue-list"></div>
+    </div>
+
+    <!-- Red heatmap -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">หมวดที่มี Red มากสุด</div>
+        <span class="section-badge">คลิกดู raw data</span>
+      </div>
+      <div id="red-heat" class="heat-grid"></div>
+    </div>
+  </div>
+
+  <!-- 6. Responsibility -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">ผู้รับผิดชอบ (Responsibility) — ทั้งหมด</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="section-badge" id="resp-count">—</span>
+        <button class="expand-toggle" id="resp-expand-btn" onclick="toggleRespExpand()">แสดงทั้งหมด</button>
+      </div>
+    </div>
+    <table class="resp-table">
+      <thead>
+        <tr>
+          <th>ผู้รับผิดชอบ</th>
+          <th style="text-align:right">ทั้งหมด</th>
+          <th style="text-align:right">Complete</th>
+          <th style="text-align:right">On Process</th>
+          <th style="text-align:right">เกินกำหนด</th>
+          <th style="min-width:130px">% Complete</th>
+        </tr>
+      </thead>
+      <tbody id="resp-tbody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ═══ MODAL ═══ -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Raw Data</div>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <!-- Filter bar inside modal -->
+    <div class="modal-filter-bar">
+      <div class="mf-group">
+        <div class="mf-label">ค้นหา</div>
+        <input class="mf-input" id="mf-search" type="text" placeholder="โครงการ / รายละเอียด / ผู้รับผิดชอบ..." oninput="applyModalFilter()">
+      </div>
+      <div class="mf-group">
+        <div class="mf-label">ระดับ</div>
+        <select class="mf-select" id="mf-level" onchange="applyModalFilter()">
+          <option value="">ทั้งหมด</option>
+          <option value="Red">🔴 Red</option>
+          <option value="Yellow">🟡 Yellow</option>
+          <option value="ไม่ระบุ">ไม่ระบุ</option>
+        </select>
+      </div>
+      <div class="mf-group">
+        <div class="mf-label">Status</div>
+        <select class="mf-select" id="mf-status" onchange="applyModalFilter()">
+          <option value="">ทั้งหมด</option>
+          <option value="Complete">✅ Complete</option>
+          <option value="On Process">🔄 On Process</option>
+          <option value="overdue">⚠️ เกินกำหนด</option>
+        </select>
+      </div>
+      <div class="mf-group">
+        <div class="mf-label">หมวด</div>
+        <select class="mf-select" id="mf-cat" onchange="applyModalFilter()" style="min-width:130px">
+          <option value="">ทั้งหมด</option>
+        </select>
+      </div>
+      <button class="mf-btn mf-reset" onclick="resetModalFilter()">รีเซ็ต</button>
+      <div class="mf-count" id="mf-count"></div>
+    </div>
+    <div class="modal-body">
+      <table class="data-table" id="modal-table">
+        <thead>
+          <tr>
+            <th onclick="sortModal('proj')" id="th-proj">โครงการ<span class="sort-arrow" id="sa-proj"></span></th>
+            <th onclick="sortModal('sk')" id="th-sk">BU<span class="sort-arrow" id="sa-sk"></span></th>
+            <th onclick="sortModal('dt')" id="th-dt">วันตรวจ<span class="sort-arrow" id="sa-dt"></span></th>
+            <th onclick="sortModal('ins')" id="th-ins">ผู้ตรวจ<span class="sort-arrow" id="sa-ins"></span></th>
+            <th onclick="sortModal('cat')" id="th-cat">หมวด<span class="sort-arrow" id="sa-cat"></span></th>
+            <th>รายละเอียด</th>
+            <th onclick="sortModal('resp')" id="th-resp">ผู้รับผิดชอบ<span class="sort-arrow" id="sa-resp"></span></th>
+            <th onclick="sortModal('lv')" id="th-lv">ระดับ<span class="sort-arrow" id="sa-lv"></span></th>
+            <th onclick="sortModal('due')" id="th-due">Due date<span class="sort-arrow" id="sa-due"></span></th>
+            <th onclick="sortModal('comp')" id="th-comp">วันแล้วเสร็จ<span class="sort-arrow" id="sa-comp"></span></th>
+            <th onclick="sortModal('st')" id="th-st">Status<span class="sort-arrow" id="sa-st"></span></th>
+          </tr>
+        </thead>
+        <tbody id="modal-tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="modal-pagination"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════
+//  DATA
+// ══════════════════════════════════
+const RAW_DATA = PLACEHOLDER_DATA;
+
+// ══════════════════════════════════
+//  STATE
+// ══════════════════════════════════
+let filtered = [...RAW_DATA];
+let barExpanded = false;
+let overdueExpanded = false;
+let respExpanded = false;
+let modalPage = 0;
+const PAGE_SIZE = 50;
+
+const MONTH_TH = {
+  '2025-01':'ม.ค.68','2025-02':'ก.พ.68','2025-08':'ส.ค.68','2025-09':'ก.ย.68',
+  '2025-10':'ต.ค.68','2025-11':'พ.ย.68','2025-12':'ธ.ค.68',
+  '2026-01':'ม.ค.69','2026-02':'ก.พ.69','2026-03':'มี.ค.69',
+  '2026-04':'เม.ย.69','2026-05':'พ.ค.69','2026-11':'พ.ย.69'
+};
+
+const CAT_COLORS = {
+  'งาน Landscape':'#9EC546','งานสถาปัตย์':'#005BA9','งานความสะอาด':'#8B9FD2',
+  'งานระบบ':'#F59E0B','งานเฟอร์นิเจอร์':'#E78D84','งานป้าย':'#323351',
+  'งานสระว่ายน้ำ':'#06B6D4','งานแสงสว่าง':'#FCD99C','Backyard':'#A78BFA','อื่นๆ':'#94A3B8'
+};
+
+// ══════════════════════════════════
+//  INIT FILTERS
+// ══════════════════════════════════
+function initFilters(){
+  // BU
+  const bus = [...new Set(RAW_DATA.map(r=>r.sk))].filter(Boolean).sort();
+  const buSel = document.getElementById('f-bu');
+  bus.forEach(b=>{ const o=document.createElement('option');o.value=b;o.textContent=b;buSel.appendChild(o); });
+
+  // Category
+  const cats = [...new Set(RAW_DATA.map(r=>r.cat))].filter(Boolean).sort();
+  const catSel = document.getElementById('f-cat');
+  cats.forEach(c=>{ const o=document.createElement('option');o.value=c;o.textContent=c;catSel.appendChild(o); });
+
+  // Projects (dynamic based on BU)
+  populateProjects('');
+  document.getElementById('f-bu').addEventListener('change', function(){ populateProjects(this.value); });
+}
+
+function populateProjects(bu){
+  const data = bu ? RAW_DATA.filter(r=>r.sk===bu) : RAW_DATA;
+  // Build unique project list using project_name
+  const projSet = {};
+  data.forEach(r=>{ if(r.proj && !projSet[r.proj]) projSet[r.proj] = r.io; });
+  const projs = Object.entries(projSet).sort((a,b)=>a[0].localeCompare(b[0],'th'));
+  const sel = document.getElementById('f-proj');
+  sel.innerHTML = '<option value="">ทั้งหมด</option>';
+  projs.forEach(([name, io])=>{
+    const o=document.createElement('option');
+    o.value=name; // filter by project_name
+    o.textContent=`${name}`.slice(0,55);
+    sel.appendChild(o);
+  });
+}
+
+function applyFilters(){
+  const bu   = document.getElementById('f-bu').value;
+  const proj = document.getElementById('f-proj').value;
+  const ins  = document.getElementById('f-inspector').value.trim().toLowerCase();
+  const resp = document.getElementById('f-resp').value.trim().toLowerCase();
+  const cat  = document.getElementById('f-cat').value;
+  const lv   = document.getElementById('f-level').value;
+  const st   = document.getElementById('f-status').value;
+
+  filtered = RAW_DATA.filter(r=>{
+    if(bu   && r.sk!==bu) return false;
+    if(proj && r.proj!==proj) return false;
+    if(ins  && !r.ins.toLowerCase().includes(ins)) return false;
+    if(resp && !r.resp.toLowerCase().includes(resp)) return false;
+    if(cat  && r.cat!==cat) return false;
+    if(lv   && r.lv!==lv) return false;
+    if(st==='overdue'){ if(!r.ov) return false; }
+    else if(st && r.st!==st) return false;
+    return true;
+  });
+  renderAll();
+}
+
+function resetFilters(){
+  ['f-bu','f-proj','f-cat','f-level','f-status'].forEach(id=>document.getElementById(id).value='');
+  ['f-inspector','f-resp'].forEach(id=>document.getElementById(id).value='');
+  populateProjects('');
+  filtered=[...RAW_DATA];
+  renderAll();
+}
+
+// ══════════════════════════════════
+//  RENDER ALL
+// ══════════════════════════════════
+function renderAll(){
+  renderCards();
+  renderProjectBars();
+  renderMonthChart();
+  renderCrossTable();
+  renderOverdue();
+  renderRedHeat();
+  renderResp();
+}
+
+// ── Cards ──
+function renderCards(){
+  const total     = filtered.length;
+  const complete  = filtered.filter(r=>r.st==='Complete').length;
+  const onprocess = filtered.filter(r=>r.st==='On Process').length;
+  const overdue   = filtered.filter(r=>r.ov).length;
+  const red       = filtered.filter(r=>r.lv==='Red'&&r.st==='On Process').length;
+  const projs     = new Set(filtered.map(r=>r.proj)).size;
+
+  set('kpi-total',    total.toLocaleString());
+  set('kpi-proj',     `${projs} โครงการ`);
+  set('kpi-complete', complete.toLocaleString());
+  set('kpi-complete-pct', total ? `${pct(complete,total)}% ของทั้งหมด` : '—');
+  set('kpi-onprocess', onprocess.toLocaleString());
+  set('kpi-onprocess-pct', total ? `${pct(onprocess,total)}% ของทั้งหมด` : '—');
+  set('kpi-overdue',  overdue.toLocaleString());
+  set('kpi-overdue-pct', onprocess ? `${pct(overdue,onprocess)}% ของ On Process` : '—');
+  const yellow = filtered.filter(r=>r.lv==='Yellow'&&r.st==='On Process').length;
+  set('kpi-red',      red.toLocaleString());
+  set('kpi-red-pct',  onprocess ? `${pct(red,onprocess)}% ของ On Process` : '—');
+  set('kpi-yellow',   yellow.toLocaleString());
+  set('kpi-yellow-pct', onprocess ? `${pct(yellow,onprocess)}% ของ On Process` : '—');
+  set('hdr-count',    `${total.toLocaleString()} รายการ`);
+}
+
+// ── Project Bars ──
+function renderProjectBars(){
+  const sortBy = document.getElementById('bar-sort').value;
+  const projData = {};
+  filtered.forEach(r=>{
+    const key = r.proj||r.io;
+    if(!projData[key]) projData[key]={name:key,sk:r.sk,complete:0,onprocess:0,overdue:0,total:0};
+    projData[key].total++;
+    if(r.st==='Complete') projData[key].complete++;
+    else if(r.st==='On Process'){
+      projData[key].onprocess++;
+      if(r.ov) projData[key].overdue++;
+    }
+  });
+
+  let projs = Object.values(projData);
+  if(sortBy==='total')       projs.sort((a,b)=>b.total-a.total);
+  else if(sortBy==='overdue') projs.sort((a,b)=>b.overdue-a.overdue);
+  else if(sortBy==='complete_pct') projs.sort((a,b)=>(b.complete/b.total)-(a.complete/a.total));
+
+  const showAll = barExpanded;
+  const display = showAll ? projs : projs.slice(0,20);
+  set('bar-expand-btn', showAll ? 'ย่อ' : `แสดงทั้งหมด (${projs.length})`);
+
+  const html = display.map(p=>{
+    const cP  = p.total? pct(p.complete, p.total) : 0;
+    const oP  = p.total? pct(p.onprocess-p.overdue, p.total) : 0;
+    const ovP = p.total? pct(p.overdue, p.total) : 0;
+    const is100 = p.total>0 && p.complete===p.total;
+    const lbl = (p.name.length>40 ? p.name.slice(0,40)+'…' : p.name);
+    const tooltip = `${p.name} | ${p.sk} | ทั้งหมด ${p.total} | Complete ${p.complete} | เกินกำหนด ${p.overdue}`;
+    return `<div class="hbar-row" onclick='openModalByProject("${esc(p.name)}")' title="${tooltip}">
+      <div class="hbar-label">${lbl}${is100?' <span style="color:var(--s-complete-text);font-size:9px;font-weight:700">✓100%</span>':''}</div>
+      <div class="hbar-track">
+        <div class="hbar-seg" style="width:${cP}%;background:var(--s-complete)"><span class="hbar-seg-text">${p.complete>4&&cP>8?p.complete:''}</span></div>
+        <div class="hbar-seg" style="width:${oP}%;background:var(--s-onprocess)"><span class="hbar-seg-text">${(p.onprocess-p.overdue)>4&&oP>8?(p.onprocess-p.overdue):''}</span></div>
+        <div class="hbar-seg" style="width:${ovP}%;background:var(--s-overdue)"><span class="hbar-seg-text">${p.overdue>4&&ovP>8?p.overdue:''}</span></div>
+      </div>
+      <div class="hbar-total">${p.total}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('project-bars').innerHTML = html;
+}
+function toggleBarExpand(){ barExpanded=!barExpanded; renderProjectBars(); }
+
+// ── Month Chart ──
+function renderMonthChart(){
+  const months = [...new Set(filtered.map(r=>r.mo))].filter(Boolean).sort();
+  if(!months.length){ document.getElementById('month-chart').innerHTML='<div style="color:var(--sub);padding:20px">ไม่มีข้อมูล</div>'; return; }
+
+  const mData = {};
+  months.forEach(m=>{ mData[m]={complete:0,onprocess:0,overdue:0,total:0}; });
+  filtered.forEach(r=>{
+    if(!r.mo||!mData[r.mo]) return;
+    mData[r.mo].total++;
+    if(r.st==='Complete') mData[r.mo].complete++;
+    else if(r.st==='On Process'){
+      mData[r.mo].onprocess++;
+      if(r.ov) mData[r.mo].overdue++;
+    }
+  });
+
+  const maxT = Math.max(...Object.values(mData).map(d=>d.total),1);
+  const MAX_H = 140;
+
+  const html = months.map(m=>{
+    const d = mData[m];
+    const h  = Math.max(Math.round(d.total/maxT*MAX_H),4);
+    const cH = Math.round(d.complete/d.total*h);
+    const oH = Math.round((d.onprocess-d.overdue)/d.total*h);
+    const vH = Math.round(d.overdue/d.total*h);
+    const closePct = d.total>0? pct(d.complete,d.total) : 0;
+    const lbl = MONTH_TH[m]||m;
+    return `<div class="month-col" onclick='openModalByMonth("${m}")'>
+      <div class="month-total">${d.total}</div>
+      <div class="month-bar-wrap" style="height:${h}px">
+        <div class="month-seg" style="height:${cH}px;background:var(--s-complete)"></div>
+        <div class="month-seg" style="height:${oH}px;background:var(--s-onprocess)"></div>
+        <div class="month-seg" style="height:${vH}px;background:var(--s-overdue)"></div>
+      </div>
+      <div class="month-label">${lbl}</div>
+      <div class="month-close-pct" style="color:${closePct>=80?'var(--s-complete-text)':'var(--s-overdue-text)'}">${closePct}%✓</div>
+      ${d.overdue>0?`<div class="month-overdue-badge">⚠${d.overdue}</div>`:''}
+    </div>`;
+  }).join('');
+  document.getElementById('month-chart').innerHTML = html;
+}
+
+// ── Cross Table ──
+function renderCrossTable(){
+  const LEVELS = ['Red','Yellow','ไม่ระบุ'];
+  const LV_LABEL = {'Red':'🔴 Red','Yellow':'🟡 Yellow','ไม่ระบุ':'— ไม่ระบุ'};
+
+  // Build data: level → {complete, onprocess_ok, overdue, total}
+  const data = {};
+  LEVELS.forEach(lv=>{ data[lv]={complete:0,onprocess:0,overdue:0,total:0}; });
+  const totals = {complete:0,onprocess:0,overdue:0,total:0};
+
+  filtered.forEach(r=>{
+    const lv = LEVELS.includes(r.lv) ? r.lv : 'ไม่ระบุ';
+    data[lv].total++;
+    totals.total++;
+    if(r.st==='Complete'){
+      data[lv].complete++; totals.complete++;
+    } else if(r.st==='On Process'){
+      if(r.ov){ data[lv].overdue++; totals.overdue++; }
+      else { data[lv].onprocess++; totals.onprocess++; }
+    }
+  });
+
+  const rows = LEVELS.map(lv=>{
+    const d = data[lv];
+    const cP = d.total>0? pct(d.complete,d.total) : 0;
+    const badgeLv = lv==='Red'?'level-red-badge':'level-yellow-badge';
+    return `<tr>
+      <td class="label-cell"><span class="${lv==='ไม่ระบุ'?'':badgeLv}">${LV_LABEL[lv]}</span></td>
+      <td onclick='openModalCross("${lv}","Complete")' style="cursor:pointer">
+        <div class="cross-cell">
+          <span class="cross-pill pill-complete">${d.complete.toLocaleString()}</span>
+          <div class="cross-pct">${d.total>0?pct(d.complete,d.total)+'%':''}</div>
+        </div>
+      </td>
+      <td onclick='openModalCross("${lv}","onprocess_ok")' style="cursor:pointer">
+        <div class="cross-cell">
+          <span class="cross-pill pill-onprocess">${d.onprocess.toLocaleString()}</span>
+          <div class="cross-pct">${d.total>0?pct(d.onprocess,d.total)+'%':''}</div>
+        </div>
+      </td>
+      <td onclick='openModalCross("${lv}","overdue")' style="cursor:pointer">
+        <div class="cross-cell">
+          <span class="cross-pill pill-overdue">${d.overdue.toLocaleString()}</span>
+          <div class="cross-pct">${d.total>0?pct(d.overdue,d.total)+'%':''}</div>
+        </div>
+      </td>
+      <td><span class="cross-pill pill-total">${d.total.toLocaleString()}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden">
+            <div style="height:100%;width:${cP}%;background:var(--s-complete);border-radius:4px;transition:width .4s"></div>
+          </div>
+          <span style="font-size:12px;font-weight:600;color:${cP>=80?'var(--s-complete-text)':'var(--s-overdue-text)'};">${cP}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Grand total row
+  const tCP = totals.total>0? pct(totals.complete,totals.total):0;
+  const totalRow = `<tr style="font-weight:700;border-top:2px solid var(--border)">
+    <td class="label-cell" style="color:var(--c1)">รวมทั้งหมด</td>
+    <td><div class="cross-cell"><span class="cross-pill pill-complete">${totals.complete.toLocaleString()}</span></div></td>
+    <td><div class="cross-cell"><span class="cross-pill pill-onprocess">${totals.onprocess.toLocaleString()}</span></div></td>
+    <td><div class="cross-cell"><span class="cross-pill pill-overdue">${totals.overdue.toLocaleString()}</span></div></td>
+    <td><span class="cross-pill pill-total">${totals.total.toLocaleString()}</span></td>
+    <td>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden">
+          <div style="height:100%;width:${tCP}%;background:var(--s-complete);border-radius:4px"></div>
+        </div>
+        <span style="font-size:12px;font-weight:700;color:${tCP>=80?'var(--s-complete-text)':'var(--s-overdue-text)'};">${tCP}%</span>
+      </div>
+    </td>
+  </tr>`;
+
+  document.getElementById('cross-tbody').innerHTML = rows + totalRow;
+}
+
+// ── Overdue ──
+function renderOverdue(){
+  const projData = {};
+  filtered.filter(r=>r.ov).forEach(r=>{
+    const key = r.proj||r.io;
+    if(!projData[key]) projData[key]={name:key,sk:r.sk,count:0,cats:{}};
+    projData[key].count++;
+    projData[key].cats[r.cat]=(projData[key].cats[r.cat]||0)+1;
+  });
+  let projs = Object.values(projData).sort((a,b)=>b.count-a.count);
+  set('overdue-proj-count', projs.length);
+  set('overdue-expand-btn', overdueExpanded?'ย่อ':`แสดงทั้งหมด (${projs.length})`);
+  if(!overdueExpanded) projs=projs.slice(0,10);
+
+  const html = projs.map(p=>{
+    const cats = Object.entries(p.cats).sort((a,b)=>b[1]-a[1]);
+    const chips = cats.map(([cat,cnt])=>{
+      const color = CAT_COLORS[cat]||'#94A3B8';
+      return `<span class="cat-chip" style="background:${color}18;color:${color};border-color:${color}55">${cat} (${cnt})</span>`;
+    }).join('');
+    const lbl = p.name.length>42?p.name.slice(0,42)+'…':p.name;
+    return `<div class="overdue-row" onclick='openModalOverdueProject("${esc(p.name)}")'>
+      <div class="overdue-top">
+        <div class="overdue-name" title="${p.name}">${lbl} <span style="font-size:11px;color:var(--sub);font-weight:400">${p.sk}</span></div>
+        <div class="overdue-count">${p.count} รายการ</div>
+      </div>
+      <div class="cat-chips">${chips}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('overdue-list').innerHTML = html||'<div style="color:var(--sub);padding:20px;text-align:center">ไม่มีข้อมูล</div>';
+}
+function toggleOverdueExpand(){ overdueExpanded=!overdueExpanded; renderOverdue(); }
+
+// ── Red Heatmap ──
+function renderRedHeat(){
+  const catData = {};
+  filtered.filter(r=>r.lv==='Red').forEach(r=>{
+    catData[r.cat]=(catData[r.cat]||0)+1;
+  });
+  const cats = Object.entries(catData).sort((a,b)=>b[1]-a[1]);
+  const max = cats.length? cats[0][1] : 1;
+  const html = cats.map(([cat,cnt])=>`
+    <div class="heat-card" onclick='openModalByRedCat("${cat}")'>
+      <div class="heat-cat">${cat}</div>
+      <div class="heat-count">${cnt}</div>
+      <div class="heat-label">รายการ Red</div>
+      <div class="heat-bar"><div class="heat-bar-fill" style="width:${Math.round(cnt/max*100)}%"></div></div>
+    </div>`).join('');
+  document.getElementById('red-heat').innerHTML = html||'<div style="color:var(--sub);padding:20px">ไม่มีข้อมูล</div>';
+}
+
+// ── Responsibility ──
+function renderResp(){
+  const respData = {};
+  filtered.forEach(r=>{
+    const key = r.resp||'ไม่ระบุ';
+    if(!respData[key]) respData[key]={complete:0,onprocess:0,overdue:0,total:0};
+    respData[key].total++;
+    if(r.st==='Complete') respData[key].complete++;
+    else if(r.st==='On Process'){
+      respData[key].onprocess++;
+      if(r.ov) respData[key].overdue++;
+    }
+  });
+  let entries = Object.entries(respData).sort((a,b)=>b[1].total-a[1].total);
+  set('resp-count', `${entries.length} หน่วยงาน`);
+  set('resp-expand-btn', respExpanded?'ย่อ':`แสดงทั้งหมด (${entries.length})`);
+  if(!respExpanded) entries=entries.slice(0,20);
+
+  const html = entries.map(([name,d])=>{
+    const p = d.total>0? pct(d.complete,d.total):0;
+    const sn = name.length>35?name.slice(0,35)+'…':name;
+    return `<tr onclick='openModalByResp("${esc(name)}")' style="cursor:pointer">
+      <td title="${name}">${sn}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace">${d.total}</td>
+      <td style="text-align:right"><span class="badge-complete">${d.complete}</span></td>
+      <td style="text-align:right"><span class="badge-onprocess">${d.onprocess}</span></td>
+      <td style="text-align:right">${d.overdue>0?`<span class="badge-overdue">${d.overdue}</span>`:'—'}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="resp-bar" style="flex:1"><div class="resp-bar-fill" style="width:${p}%"></div></div>
+          <span style="font-size:11px;color:var(--sub);font-family:'IBM Plex Mono',monospace">${p}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('resp-tbody').innerHTML = html;
+}
+function toggleRespExpand(){ respExpanded=!respExpanded; renderResp(); }
+
+// ══════════════════════════════════
+//  MODAL
+// ══════════════════════════════════
+let modalSourceRows = []; // original unfiltered rows passed to modal
+let modalRows       = []; // after modal filter
+let modalSortKey    = '';
+let modalSortDir    = 1;  // 1=asc, -1=desc
+
+function openModal(rows, title){
+  modalSourceRows = rows;
+  modalSortKey = ''; modalSortDir = 1;
+  set('modal-title', title);
+  // reset modal filters
+  ['mf-search','mf-level','mf-status','mf-cat'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.value='';
+  });
+  // populate modal category dropdown from these rows
+  const cats = [...new Set(rows.map(r=>r.cat))].filter(Boolean).sort();
+  const catSel = document.getElementById('mf-cat');
+  catSel.innerHTML = '<option value="">ทั้งหมด</option>';
+  cats.forEach(c=>{ const o=document.createElement('option');o.value=c;o.textContent=c;catSel.appendChild(o); });
+  // clear sort arrows
+  document.querySelectorAll('.sort-arrow').forEach(el=>{ el.textContent=''; el.classList.remove('active'); });
+  applyModalFilter();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function applyModalFilter(){
+  const q     = (document.getElementById('mf-search').value||'').toLowerCase();
+  const lv    = document.getElementById('mf-level').value;
+  const st    = document.getElementById('mf-status').value;
+  const cat   = document.getElementById('mf-cat').value;
+
+  modalRows = modalSourceRows.filter(r=>{
+    if(lv  && r.lv !== lv) return false;
+    if(cat && r.cat !== cat) return false;
+    if(st === 'overdue')     { if(!r.ov) return false; }
+    else if(st && r.st !== st) return false;
+    if(q){
+      const hay = `${r.proj} ${r.det} ${r.resp} ${r.ins} ${r.area}`.toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  if(modalSortKey) applyModalSort(false);
+  modalPage = 0;
+  set('mf-count', `${modalRows.length.toLocaleString()} รายการ`);
+  renderModalPage();
+}
+
+function resetModalFilter(){
+  ['mf-search'].forEach(id=>document.getElementById(id).value='');
+  ['mf-level','mf-status','mf-cat'].forEach(id=>document.getElementById(id).value='');
+  applyModalFilter();
+}
+
+function sortModal(key){
+  if(modalSortKey===key) modalSortDir*=-1;
+  else { modalSortKey=key; modalSortDir=1; }
+  // update arrows
+  document.querySelectorAll('.sort-arrow').forEach(el=>{ el.textContent=''; el.classList.remove('active'); });
+  const sa = document.getElementById('sa-'+key);
+  if(sa){ sa.textContent = modalSortDir===1?' ▲':' ▼'; sa.classList.add('active'); }
+  applyModalSort(true);
+  renderModalPage();
+}
+
+function applyModalSort(resetPage){
+  const key = modalSortKey;
+  modalRows = [...modalRows].sort((a,b)=>{
+    let va = a[key]||'', vb = b[key]||'';
+    // date fields — sort as string (ISO format sorts fine)
+    const cmp = String(va).localeCompare(String(vb),'th',{numeric:true});
+    return cmp * modalSortDir;
+  });
+  if(resetPage) modalPage=0;
+}
+
+function renderModalPage(){
+  const start = modalPage*PAGE_SIZE;
+  const rows  = modalRows.slice(start, start+PAGE_SIZE);
+  const html  = rows.map(r=>{
+    const isOv = r.ov;
+    const stClass  = r.st==='Complete'?'st-complete':(isOv?'st-overdue':'st-onprocess');
+    const stLabel  = r.st==='Complete'?'Complete':(isOv?'⚠ เกินกำหนด':'On Process');
+    const lvClass  = r.lv==='Red'?'level-red':(r.lv==='Yellow'?'level-yellow':'');
+    return `<tr>
+      <td title="${r.proj}">${(r.proj||r.io).slice(0,30)}</td>
+      <td>${r.sk}</td>
+      <td style="white-space:nowrap">${r.dt}</td>
+      <td title="${r.ins}">${r.ins.slice(0,20)}</td>
+      <td>${r.cat}</td>
+      <td title="${r.det}">${r.det.slice(0,50)}${r.det.length>50?'…':''}</td>
+      <td title="${r.resp}">${r.resp.slice(0,25)}</td>
+      <td><span class="${lvClass}">${r.lv}</span></td>
+      <td style="white-space:nowrap">${r.due}</td>
+      <td style="white-space:nowrap">${r.comp}</td>
+      <td><span class="${stClass}">${stLabel}</span></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('modal-tbody').innerHTML = html||'<tr><td colspan="11" style="text-align:center;color:var(--sub);padding:30px">ไม่พบข้อมูล</td></tr>';
+
+  const totalPages = Math.ceil(modalRows.length/PAGE_SIZE);
+  if(totalPages<=1){ set('modal-pagination',''); return; }
+  let pages = `<span>หน้า ${modalPage+1}/${totalPages} (${modalRows.length.toLocaleString()} รายการ)</span>`;
+  for(let i=0;i<totalPages;i++){
+    if(i===0||i===totalPages-1||Math.abs(i-modalPage)<=2)
+      pages+=`<button class="page-btn ${i===modalPage?'active':''}" onclick="goPage(${i})">${i+1}</button>`;
+    else if(Math.abs(i-modalPage)===3) pages+='<span style="padding:0 4px">…</span>';
+  }
+  set('modal-pagination', pages);
+}
+
+function goPage(i){ modalPage=i; renderModalPage(); document.querySelector('.modal-body').scrollTop=0; }
+function closeModal(e){ if(e.target===document.getElementById('modal-overlay')) closeModalDirect(); }
+function closeModalDirect(){ document.getElementById('modal-overlay').classList.remove('open'); }
+
+// Modal openers
+function openModalFiltered(t){
+  const map = {
+    'all':     [filtered,                                     '📋 ทั้งหมด'],
+    'Complete':[filtered.filter(r=>r.st==='Complete'),        '✅ Complete'],
+    'On Process':[filtered.filter(r=>r.st==='On Process'),    '🔄 On Process'],
+    'overdue': [filtered.filter(r=>r.ov),                     '⚠️ เกินกำหนด'],
+    'Red':     [filtered.filter(r=>r.lv==='Red'&&r.st==='On Process'), '🔴 Red + On Process'],
+    'Yellow':  [filtered.filter(r=>r.lv==='Yellow'&&r.st==='On Process'), '🟡 Yellow + On Process'],
+  };
+  if(map[t]) openModal(...map[t]);
+}
+function openModalByProject(proj){ openModal(filtered.filter(r=>r.proj===proj||r.io===proj), `📌 ${proj}`); }
+function openModalByMonth(m){ openModal(filtered.filter(r=>r.mo===m), `📅 ${MONTH_TH[m]||m}`); }
+function openModalByRedCat(cat){ openModal(filtered.filter(r=>r.lv==='Red'&&r.cat===cat), `🔴 Red — ${cat}`); }
+function openModalOverdueProject(proj){ openModal(filtered.filter(r=>r.ov&&(r.proj===proj||r.io===proj)), `⚠️ เกินกำหนด — ${proj}`); }
+function openModalByResp(resp){ openModal(filtered.filter(r=>r.resp===resp), `👤 ${resp}`); }
+function openModalCross(lv, stType){
+  let rows, title;
+  if(stType==='Complete')    { rows=filtered.filter(r=>r.lv===lv&&r.st==='Complete'); title=`✅ Complete — ${lv}`; }
+  else if(stType==='onprocess_ok'){ rows=filtered.filter(r=>r.lv===lv&&r.st==='On Process'&&!r.ov); title=`🔄 On Process (ไม่เกินกำหนด) — ${lv}`; }
+  else if(stType==='overdue'){ rows=filtered.filter(r=>r.lv===lv&&r.ov); title=`⚠️ เกินกำหนด — ${lv}`; }
+  openModal(rows, title);
+}
+
+// ══════════════════════════════════
+//  UTILS
+// ══════════════════════════════════
+function set(id, html){ const el=document.getElementById(id); if(el) el.innerHTML=html; }
+function pct(a,b){ return b>0? Math.round(a/b*100):0; }
+function esc(s){ return (s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+// ══════════════════════════════════
+//  BOOT
+// ══════════════════════════════════
+initFilters();
+renderAll();
+</script>
+</body>
+</html>
